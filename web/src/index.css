@@ -1,0 +1,148 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Inter Variable', system-ui, sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    /* Brand palette — §8.1. Surfaces: app bg vs white chat panel. */
+    --background: #f7f8fa;
+    --foreground: #1a1d21;
+    --card: #ffffff;
+    --card-foreground: #1a1d21;
+    --popover: #ffffff;
+    --popover-foreground: #1a1d21;
+    /* Committed accent (§8.1): refined warm amber/copper drives agent + actions. */
+    --primary: #d97706;
+    --primary-foreground: #ffffff;
+    /* AI bubble surface + neutral controls. */
+    --secondary: #f1f3f5;
+    --secondary-foreground: #1a1d21;
+    --muted: #f1f3f5;
+    --muted-foreground: #6b7280;
+    --accent: #fef3e2;
+    --accent-foreground: #b45309;
+    --destructive: #dc2626;
+    --border: #e5e7eb;
+    --input: #e5e7eb;
+    --ring: #d97706;
+    --chart-1: #d97706;
+    --chart-2: #f59e0b;
+    --chart-3: #fbbf24;
+    --chart-4: #fcd34d;
+    --chart-5: #fde68a;
+    /* Buttons ~10px; bubble radius lives on the bubble component (~16px). */
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+    /* Dark theme (§8.1): near-blacks (not pure black), off-white text, amber accent. */
+    --background: #16181d;
+    --foreground: #ececee;
+    --card: #1c1f26;
+    --card-foreground: #ececee;
+    --popover: #1c1f26;
+    --popover-foreground: #ececee;
+    /* Slightly brighter amber for contrast against the dark surface. */
+    --primary: #f59e0b;
+    --primary-foreground: #1a1208;
+    --secondary: #262a33;
+    --secondary-foreground: #ececee;
+    --muted: #262a33;
+    --muted-foreground: #9aa0aa;
+    --accent: #2a2620;
+    --accent-foreground: #f59e0b;
+    --destructive: #ef4444;
+    --border: #2a2e37;
+    --input: #2a2e37;
+    --ring: #f59e0b;
+    --chart-1: #f59e0b;
+    --chart-2: #fbbf24;
+    --chart-3: #fcd34d;
+    --chart-4: #fde68a;
+    --chart-5: #fef3c7;
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground antialiased;
+    }
+  html {
+    @apply font-sans;
+    }
+}
+
+/* Quality floor (§8.1): respect reduced-motion — disable all transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
