@@ -14,7 +14,8 @@ export function createApp(): Express {
   // Restrict to the configured frontend origin when set; reflect any origin in
   // local development where CORS_ORIGIN is left empty.
   app.use(cors({ origin: env.CORS_ORIGIN || true }));
-  app.use(express.json());
+  // A chat message is capped at 4000 chars; this guards against oversized bodies.
+  app.use(express.json({ limit: "100kb" }));
 
   // Liveness probe for the host platform's health checks.
   app.get("/health", (_req, res) => {

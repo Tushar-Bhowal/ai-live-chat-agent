@@ -28,6 +28,19 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // Malformed or oversized JSON bodies surface as body-parser errors.
+  if (typeof err === "object" && err !== null && "type" in err) {
+    const parserError = err as { type?: string };
+    if (parserError.type === "entity.parse.failed") {
+      res.status(400).json({ error: "Invalid JSON in request body." });
+      return;
+    }
+    if (parserError.type === "entity.too.large") {
+      res.status(413).json({ error: "Request body is too large." });
+      return;
+    }
+  }
+
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Something went wrong. Please try again." });
 };
