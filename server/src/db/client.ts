@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import { env } from "../config/env.js";
 import { PrismaClient } from "../generated/prisma/client.js";
 
 /**
@@ -9,22 +10,17 @@ import { PrismaClient } from "../generated/prisma/client.js";
  * development from opening a new connection pool on every change; in production
  * the module is evaluated once.
  */
-const connectionString = process.env["DATABASE_URL"];
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
-}
-
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 function createClient(): PrismaClient {
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
   return new PrismaClient({ adapter });
 }
 
 export const prisma: PrismaClient = globalForPrisma.prisma ?? createClient();
 
-if (process.env["NODE_ENV"] !== "production") {
+if (env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
