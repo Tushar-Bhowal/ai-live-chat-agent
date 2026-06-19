@@ -1,0 +1,108 @@
+import { conversationRepository } from "../../repositories/conversation.repository.js";
+import { messageRepository } from "../../repositories/message.repository.js";
+import type { Conversation, Message } from "../../generated/prisma/client.js";
+import { DEFAULT_CHANNEL } from "../channels/channel.js";
+import { buildSystemPrompt } from "../knowledge/knowledge.service.js";
+import { getLLMProvider } from "../llm/index.js";
+import type { ChatMessage } from "../llm/index.js";
+
+/** Hard cap on a single inbound message; enforced again at the HTTP boundary. */
+export const MAX_MESSAGE_LENGTH = 4000;
+
+/** How many recent messages to send as context, to bound prompt size and cost. */
+const HISTORY_LIMIT = 10;
+
+/** Raised when the inbound message fails basic validation. */
+export class InvalidMessageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidMessageError";
+  }
+}
+
+export interface IncomingMessage {
+  channel?: string;
+  /** The conversation id; a new conversation is started when absent or unknown. */
+  sessionId?: string;
+  text: string;
+}
+
+export interface AgentReply {
+  reply: string;
+  sessionId: string;
+}
+
+/**
+ * The channel-agnostic heart of the agent. Every channel — the web widget today,
+ * a messaging webhook tomorrow — funnels through here, so persistence, context,
+ * and the model call live in one place.
+ */
+export async function handleIncomingMessage(
+  input: IncomingMessage,
+): Promise<AgentReply> {
+  const text = input.text.trim();
+  if (!text) {
+    throw new InvalidMessageError("message is required");
+  }
+  if (text.length > MAX_MESSAGE_LENGTH) {
+    throw new InvalidMessageError(
+      `message too long (max ${MAX_MESSAGE_LENGTH} chars)`,
+    );
+  }
+
+  const conversation = await resolveConversation(
+    input.sessionId,
+    input.channel ?? DEFAULT_CHANNEL,
+  );
+
+  await messageRepository.create({
+    conversationId: conversation.id,
+    sender: "user",
+    text,
+  });
+
+  const history = await messageRepository.findRecent(
+    conversation.id,
+    HISTORY_LIMIT,
+  );
+  const systemPrompt = await buildSystemPrompt();
+
+  // Tool calling plugs in here: inspect the latest turn, run any matching tool
+  // from the registry, and feed the result back before the final model call.
+  // Isolating it to this seam keeps persistence and channel handling untouched.
+
+  const reply = await getLLMProvider().generateReply(
+    systemPrompt,
+    toChatHistory(history),
+  );
+
+  await messageRepository.create({
+    conversationId: conversation.id,
+    sender: "ai",
+    text: reply,
+  });
+
+  return { reply, sessionId: conversation.id };
+}
+
+/** Reuses the conversation for a known session id, otherwise starts a new one. */
+async function resolveConversation(
+  sessionId: string | undefined,
+  channel: string,
+): Promise<Conversation> {
+  if (sessionId) {
+    const existing = await conversationRepository.findById(sessionId);
+    if (existing) {
+      return existing;
+    }
+  }
+  return conversationRepository.create({ channel });
+}
+
+/** Maps stored messages to the provider's neutral role/content shape. */
+function toChatHistory(messages: Message[]): ChatMessage[] {
+  return messages.map((message) => ({
+    role: message.sender === "ai" ? "assistant" : message.sender,
+    content: message.text,
+  }));
+}
