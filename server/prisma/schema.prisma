@@ -1,0 +1,46 @@
+// The generated client lives in src/generated/prisma. The datasource URL is
+// supplied at runtime via prisma.config.ts, so this block only declares the
+// provider.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Sender {
+  user
+  ai
+  system
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  channel   String    @default("livechat") // e.g. livechat, whatsapp, instagram
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  metadata  Json?
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         Sender
+  text           String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model Faq {
+  id        String   @id @default(uuid())
+  topic     String // "shipping" | "returns" | "support_hours" ...
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+}

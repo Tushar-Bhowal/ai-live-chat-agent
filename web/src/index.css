@@ -49,14 +49,14 @@
 }
 
 :root {
-    /* Brand palette — §8.1. Surfaces: app bg vs white chat panel. */
+    /* Surfaces: app background vs. white chat panel. */
     --background: #f7f8fa;
     --foreground: #1a1d21;
     --card: #ffffff;
     --card-foreground: #1a1d21;
     --popover: #ffffff;
     --popover-foreground: #1a1d21;
-    /* Committed accent (§8.1): refined warm amber/copper drives agent + actions. */
+    /* Warm amber/copper accent drives the agent header and primary actions. */
     --primary: #d97706;
     --primary-foreground: #ffffff;
     /* AI bubble surface + neutral controls. */
@@ -88,7 +88,7 @@
 }
 
 .dark {
-    /* Dark theme (§8.1): near-blacks (not pure black), off-white text, amber accent. */
+    /* Dark theme: near-blacks (not pure black), off-white text, amber accent. */
     --background: #16181d;
     --foreground: #ececee;
     --card: #1c1f26;
@@ -135,7 +135,7 @@
     }
 }
 
-/* Quality floor (§8.1): respect reduced-motion — disable all transitions/animations. */
+/* Respect reduced-motion: disable transitions and animations when requested. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
