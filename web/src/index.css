@@ -135,6 +135,28 @@
     }
 }
 
+/* Typing indicator — three softly pulsing dots in the agent bubble. */
+.typing-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background-color: var(--muted-foreground);
+  animation: typing-dot 1.2s infinite ease-in-out;
+}
+
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
 /* Respect reduced-motion: disable transitions and animations when requested. */
 @media (prefers-reduced-motion: reduce) {
   *,
