@@ -35,7 +35,7 @@ const markdownComponents: Components = {
 };
 
 const GREETING =
-  "Hi! 👋 I'm here to help with orders, shipping, returns, and more. What can I do for you?";
+  "Hi, I'm Mira 👋 I can help with orders, shipping, returns, and more. What can I do for you?";
 
 interface MessageListProps {
   messages: UiMessage[];
