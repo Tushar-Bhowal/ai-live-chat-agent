@@ -12,6 +12,7 @@ export interface UseChat {
   messages: UiMessage[];
   sending: boolean;
   error: string | null;
+  loadingHistory: boolean;
   send: (text: string) => void;
 }
 
@@ -21,10 +22,14 @@ function newId(): string {
 
 // Owns the conversation: history, in-flight state, and sending.
 export function useChat(): UseChat {
+  const sessionIdRef = useRef<string | null>(getSessionId());
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionIdRef = useRef<string | null>(getSessionId());
+  // Only "loading" when there's a prior session whose history we need to fetch.
+  const [loadingHistory, setLoadingHistory] = useState(
+    sessionIdRef.current !== null,
+  );
 
   // Restore the existing conversation on mount, if there is one.
   useEffect(() => {
@@ -41,6 +46,9 @@ export function useChat(): UseChat {
       })
       .catch(() => {
         // Start fresh if history can't be loaded; not worth alarming the user.
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingHistory(false);
       });
 
     return () => {
@@ -83,5 +91,5 @@ export function useChat(): UseChat {
     [sending],
   );
 
-  return { messages, sending, error, send };
+  return { messages, sending, error, loadingHistory, send };
 }

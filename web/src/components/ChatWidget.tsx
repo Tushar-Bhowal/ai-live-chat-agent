@@ -6,8 +6,8 @@ import { MessageInput } from "@/components/MessageInput";
 import { useChat } from "@/hooks/useChat";
 
 export function ChatWidget() {
-  const { messages, sending, error, send } = useChat();
-  const [dark, setDark] = useState(false);
+  const { messages, sending, error, loadingHistory, send } = useChat();
+  const [dark, setDark] = useState(true);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -37,7 +37,12 @@ export function ChatWidget() {
         </Button>
       </header>
 
-      <MessageList messages={messages} sending={sending} error={error} />
+      <MessageList
+        messages={messages}
+        sending={sending}
+        error={error}
+        loadingHistory={loadingHistory}
+      />
 
       <MessageInput onSend={send} disabled={sending} />
     </div>

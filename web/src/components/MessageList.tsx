@@ -42,9 +42,15 @@ interface MessageListProps {
   messages: UiMessage[];
   sending: boolean;
   error: string | null;
+  loadingHistory: boolean;
 }
 
-export function MessageList({ messages, sending, error }: MessageListProps) {
+export function MessageList({
+  messages,
+  sending,
+  error,
+  loadingHistory,
+}: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Scroll the list container itself (not scrollIntoView, which would also
@@ -52,7 +58,15 @@ export function MessageList({ messages, sending, error }: MessageListProps) {
   useEffect(() => {
     const el = containerRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [messages, sending, error]);
+  }, [messages, sending, error, loadingHistory]);
+
+  if (loadingHistory) {
+    return (
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-5">
+        <HistorySkeleton />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -107,6 +121,38 @@ function TypingIndicator() {
         <MessageLoading />
         <span className="sr-only">Mira is typing</span>
       </div>
+    </div>
+  );
+}
+
+// Placeholder bubbles shown while a returning user's history loads.
+function HistorySkeleton() {
+  const rows: Array<{ side: "left" | "right"; width: string }> = [
+    { side: "left", width: "w-48" },
+    { side: "right", width: "w-36" },
+    { side: "left", width: "w-56" },
+    { side: "right", width: "w-44" },
+  ];
+  return (
+    <div className="space-y-4" aria-hidden="true">
+      {rows.map((row, i) => (
+        <div
+          key={i}
+          className={cn(
+            "flex",
+            row.side === "left" ? "justify-start" : "justify-end",
+          )}
+        >
+          <div
+            className={cn(
+              "h-10 animate-pulse rounded-2xl bg-secondary",
+              row.width,
+              row.side === "left" ? "rounded-bl-md" : "rounded-br-md",
+            )}
+          />
+        </div>
+      ))}
+      <span className="sr-only">Loading conversation</span>
     </div>
   );
 }
