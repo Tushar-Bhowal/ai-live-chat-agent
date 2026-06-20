@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Markdown, { type Components } from "react-markdown";
 import { cn } from "@/lib/utils";
 import { MessageLoading } from "@/components/MessageLoading";
@@ -115,12 +115,26 @@ function Bubble({ sender, text }: { sender: "user" | "ai"; text: string }) {
 }
 
 function TypingIndicator() {
+  const [slow, setSlow] = useState(false);
+
+  // On a free-tier cold start the first reply can take ~30-60s; after a short
+  // wait, reassure the user it's working rather than stuck.
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), 8000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="flex justify-start">
+    <div className="flex flex-col items-start gap-1.5">
       <div className="flex items-center rounded-2xl rounded-bl-md bg-secondary px-3 py-2">
         <MessageLoading />
         <span className="sr-only">Mira is typing</span>
       </div>
+      {slow && (
+        <span className="px-1 text-xs text-muted-foreground">
+          Taking a little longer than usual — the server may be waking up…
+        </span>
+      )}
     </div>
   );
 }
