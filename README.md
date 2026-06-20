@@ -16,8 +16,29 @@ very little change. That extensibility is the main design goal.
 
 ---
 
+## Live demo
+
+- **App:** https://ai-live-chat-agent-pi.vercel.app
+- **API:** https://ai-live-chat-agent-fuda.onrender.com
+
+> **The first request may take ~30–60 seconds — this is expected.** The backend
+> runs on Render's free tier, which spins the server down after ~15 minutes of
+> inactivity. The first request after it's been idle has to wake the server, so
+> the very first reply (or the page's history load) can take up to a minute — the
+> typing indicator will simply spin a little longer. **Every request after that
+> is fast.** If your first message seems stuck, give it up to a minute and it
+> will come through.
+>
+> To skip the wait when demoing: open the API health URL first to warm it —
+> [/health](https://ai-live-chat-agent-fuda.onrender.com/health) — wait for
+> `{"status":"ok"}`, then use the app. (In a real deployment you'd keep it warm
+> with a free uptime pinger like UptimeRobot hitting `/health` every ~10 minutes.)
+
+---
+
 ## Contents
 
+- [Live demo](#live-demo)
 - [What it does](#what-it-does)
 - [How it works (architecture)](#how-it-works-architecture)
 - [Project structure](#project-structure)
@@ -462,22 +483,27 @@ pick it up automatically.
 
 ## Deployment
 
-Designed to run on free tiers:
+This project is deployed on free tiers (see [Live demo](#live-demo)):
 
-- **Database — [Neon](https://neon.tech)** (serverless PostgreSQL). Use the pooled
-  connection string as `DATABASE_URL` and the direct string as `DIRECT_URL`.
+- **Database — [Neon](https://neon.tech)** (serverless PostgreSQL). The app's
+  `DATABASE_URL` uses the **pooled** connection string; migrations use the
+  **direct** string (`DIRECT_URL`). The Prisma CLI is configured to prefer the
+  direct URL, so `prisma migrate deploy` / `prisma db seed` are run once to set
+  up and seed the database.
 - **Backend — [Render](https://render.com)** (free web service):
+  - Root directory: `server`
   - Build command: `npm install && npx prisma generate && npm run build`
   - Start command: `npm start`
-  - Run `npx prisma migrate deploy` once against the database, then
-    `npx prisma db seed` to load the FAQ data.
-  - Set all backend env vars in the dashboard. A `/health` uptime ping helps with
-    cold starts.
-- **Frontend — [Vercel](https://vercel.com)**: set `VITE_API_BASE_URL` to the
-  Render API URL.
+  - Env vars in the dashboard: `DATABASE_URL` (Neon pooled), `OPENROUTER_API_KEY`,
+    `OPENROUTER_MODEL`, `LLM_PROVIDER`, `NODE_ENV=production`, and `CORS_ORIGIN`
+    set to the Vercel URL. (`PORT` is provided by Render automatically.)
+- **Frontend — [Vercel](https://vercel.com)**: root directory `web`,
+  `VITE_API_BASE_URL` set to the Render API URL.
 
-Set `CORS_ORIGIN` on the backend to the deployed frontend URL. On free tiers the
-first request after idle can be slow due to cold starts.
+**Free-tier cold start:** Render's free instance spins down after ~15 minutes of
+inactivity, so the first request after idle takes ~30–60 seconds to wake the
+server; every request after that is fast. Warm it by hitting `/health` first, or
+keep it warm with an uptime pinger. See the note under [Live demo](#live-demo).
 
 ---
 
