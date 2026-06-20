@@ -1,3 +1,5 @@
+import type { Tool } from "../tools/tool.js";
+
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
@@ -9,8 +11,17 @@ export interface ChatMessage {
  * vendor-agnostic.
  */
 export interface LLMProvider {
-  /** Returns the assistant's reply, or throws an {@link LLMError} on failure. */
-  generateReply(systemPrompt: string, history: ChatMessage[]): Promise<string>;
+  /**
+   * Returns the assistant's reply, or throws an {@link LLMError} on failure.
+   * When `tools` are supplied, the provider runs the tool-calling loop
+   * (request -> execute -> feed back) internally, so callers never deal with a
+   * vendor's tool-call format.
+   */
+  generateReply(
+    systemPrompt: string,
+    history: ChatMessage[],
+    tools?: Tool[],
+  ): Promise<string>;
 }
 
 export type LLMErrorKind =

@@ -5,6 +5,7 @@ import { DEFAULT_CHANNEL } from "../channels/channel.js";
 import { buildSystemPrompt } from "../knowledge/knowledge.service.js";
 import { getLLMProvider } from "../llm/index.js";
 import type { ChatMessage } from "../llm/index.js";
+import { tools } from "../tools/tool.js";
 
 /** Hard cap on a single inbound message; enforced again at the HTTP boundary. */
 export const MAX_MESSAGE_LENGTH = 4000;
@@ -67,13 +68,12 @@ export async function handleIncomingMessage(
   );
   const systemPrompt = await buildSystemPrompt();
 
-  // Tool calling plugs in here: inspect the latest turn, run any matching tool
-  // from the registry, and feed the result back before the final model call.
-  // Isolating it to this seam keeps persistence and channel handling untouched.
-
+  // The provider runs the tool-calling loop with whatever tools we pass; the
+  // agent just decides which tools are available for this turn.
   const reply = await getLLMProvider().generateReply(
     systemPrompt,
     toChatHistory(history),
+    tools,
   );
 
   await messageRepository.create({

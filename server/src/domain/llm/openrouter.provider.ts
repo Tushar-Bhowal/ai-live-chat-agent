@@ -2,10 +2,13 @@ import OpenAI from "openai";
 import { env } from "../../config/env.js";
 import { LLMError } from "./llm-provider.js";
 import type { ChatMessage, LLMProvider } from "./llm-provider.js";
+import type { Tool } from "../tools/tool.js";
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_OUTPUT_TOKENS = 500;
+// Bounds how many times the model may call tools before it must answer.
+const MAX_TOOL_ROUNDS = 4;
 
 /**
  * Talks to models hosted on OpenRouter through its OpenAI-compatible API. The
@@ -35,36 +38,101 @@ export class OpenRouterProvider implements LLMProvider {
   async generateReply(
     systemPrompt: string,
     history: ChatMessage[],
+    tools: Tool[] = [],
   ): Promise<string> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    try {
-      const completion = await this.client.chat.completions.create(
-        {
-          model: this.model,
-          max_tokens: MAX_OUTPUT_TOKENS,
-          temperature: 0.3,
-          // The neutral ChatMessage shape maps 1:1 onto the SDK's message param.
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...history,
-          ] as OpenAI.Chat.ChatCompletionMessageParam[],
-        },
-        { signal: controller.signal },
-      );
+    // The neutral ChatMessage shape maps 1:1 onto the SDK's message param.
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      { role: "system", content: systemPrompt },
+      ...(history as OpenAI.Chat.ChatCompletionMessageParam[]),
+    ];
+    const toolParams = tools.length ? toToolParams(tools) : undefined;
 
-      const reply = completion.choices[0]?.message?.content?.trim();
-      if (!reply) {
-        throw new LLMError("empty_response", "The model returned no content.");
+    try {
+      // Loop so the model can call tools, see the results, then answer.
+      for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+        const completion = await this.client.chat.completions.create(
+          {
+            model: this.model,
+            max_tokens: MAX_OUTPUT_TOKENS,
+            temperature: 0.3,
+            messages,
+            ...(toolParams ? { tools: toolParams } : {}),
+          },
+          { signal: controller.signal },
+        );
+
+        const message = completion.choices[0]?.message;
+        if (!message) {
+          throw new LLMError("empty_response", "The model returned no content.");
+        }
+
+        const toolCalls = (message.tool_calls ?? []).filter(
+          (call) => call.type === "function",
+        );
+        if (toolCalls.length === 0) {
+          const reply = message.content?.trim();
+          if (!reply) {
+            throw new LLMError(
+              "empty_response",
+              "The model returned no content.",
+            );
+          }
+          return reply;
+        }
+
+        // Record the model's tool request, then append each tool's result.
+        messages.push(message);
+        for (const call of toolCalls) {
+          messages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: await runTool(tools, call.function.name, call.function.arguments),
+          });
+        }
       }
-      return reply;
+
+      throw new LLMError(
+        "unknown",
+        "The model kept requesting tools without answering.",
+      );
     } catch (error) {
       throw toLLMError(error);
     } finally {
       clearTimeout(timeout);
     }
   }
+}
+
+function toToolParams(tools: Tool[]): OpenAI.Chat.ChatCompletionTool[] {
+  return tools.map((tool) => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters,
+    },
+  }));
+}
+
+async function runTool(
+  tools: Tool[],
+  name: string,
+  rawArgs: string,
+): Promise<string> {
+  const tool = tools.find((candidate) => candidate.name === name);
+  if (!tool) {
+    return JSON.stringify({ error: `Unknown tool: ${name}` });
+  }
+  let args: Record<string, unknown> = {};
+  try {
+    args = JSON.parse(rawArgs || "{}") as Record<string, unknown>;
+  } catch {
+    return JSON.stringify({ error: "Invalid tool arguments." });
+  }
+  return tool.execute(args);
 }
 
 function toLLMError(error: unknown): LLMError {

@@ -1,16 +1,20 @@
+import { orderStatusTool } from "./order-status.tool.js";
+
 /**
- * A capability the agent can call to fetch live data or take an action — for
- * example, looking up an order's status. A tool is just a name, a description
- * the model can reason about, and an `execute` function.
+ * A capability the agent can call to fetch live data or take an action that the
+ * static knowledge base can't answer — for example, looking up an order.
  *
- * To add one: implement this interface and register it in `tools`. The agent
- * consults the registry while composing a reply (see agent.service.ts).
+ * `parameters` is a JSON Schema describing the arguments, which is what the
+ * model is shown so it can decide when and how to call the tool. `execute`
+ * receives the parsed arguments and returns a string result (JSON is fine) that
+ * is fed back to the model.
  */
-export interface Tool<Input = unknown, Output = unknown> {
+export interface Tool {
   readonly name: string;
   readonly description: string;
-  execute(input: Input): Promise<Output>;
+  readonly parameters: Record<string, unknown>;
+  execute(args: Record<string, unknown>): Promise<string>;
 }
 
-/** No tools are wired up yet; this is the extension point. */
-export const tools: Tool[] = [];
+/** Tools available to the agent. Add a tool by implementing Tool and listing it here. */
+export const tools: Tool[] = [orderStatusTool];
