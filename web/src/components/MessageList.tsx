@@ -44,15 +44,20 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, sending, error }: MessageListProps) {
-  const endRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Keep the newest content in view as the conversation grows.
+  // Scroll the list container itself (not scrollIntoView, which would also
+  // scroll the page) so the newest message stays in view as the chat grows.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = containerRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages, sending, error]);
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-5">
+    <div
+      ref={containerRef}
+      className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
+    >
       <Bubble sender="ai" text={GREETING} />
 
       {messages.map((message) => (
@@ -68,8 +73,6 @@ export function MessageList({ messages, sending, error }: MessageListProps) {
           </div>
         </div>
       )}
-
-      <div ref={endRef} />
     </div>
   );
 }
