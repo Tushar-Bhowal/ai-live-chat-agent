@@ -9,8 +9,13 @@ import { tools } from "../tools/tool.js";
 
 export const MAX_MESSAGE_LENGTH = 4000;
 
-// Recent messages sent as context, to bound prompt size and cost.
-const HISTORY_LIMIT = 10;
+// Coarse cap on how many recent messages we pull from the DB before trimming.
+const HISTORY_FETCH_LIMIT = 50;
+
+// Token budget for the history we actually send. A count-based cap can't bound
+// cost (one message can be 1 token or thousands), so we trim by estimated tokens
+// to keep the prompt and spend within a known ceiling.
+const HISTORY_TOKEN_BUDGET = 1500;
 
 export class InvalidMessageError extends Error {
   constructor(message: string) {
@@ -57,10 +62,11 @@ export async function handleIncomingMessage(
     text,
   });
 
-  const history = await messageRepository.findRecent(
+  const recent = await messageRepository.findRecent(
     conversation.id,
-    HISTORY_LIMIT,
+    HISTORY_FETCH_LIMIT,
   );
+  const history = selectWithinTokenBudget(recent, HISTORY_TOKEN_BUDGET);
   const systemPrompt = await buildSystemPrompt();
 
   // The provider runs the tool-calling loop with whatever tools we pass; the
@@ -92,6 +98,30 @@ async function resolveConversation(
     }
   }
   return conversationRepository.create({ channel });
+}
+
+// ~4 characters per token is a provider-agnostic approximation. This is a budget
+// guard, not exact accounting, so we avoid coupling to a vendor-specific tokenizer.
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4) + 4;
+}
+
+// Keep the newest messages whose combined estimate fits the budget (always at
+// least the latest one), returned in chronological order.
+function selectWithinTokenBudget(
+  messages: Message[],
+  budget: number,
+): Message[] {
+  const kept: Message[] = [];
+  let total = 0;
+  for (const message of [...messages].reverse()) {
+    const cost = estimateTokens(message.text);
+    if (kept.length > 0 && total + cost > budget) break;
+    total += cost;
+    kept.push(message);
+  }
+  kept.reverse();
+  return kept;
 }
 
 // Map stored messages to the provider's neutral role/content shape.

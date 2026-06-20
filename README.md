@@ -413,14 +413,20 @@ rather than a 404, so the widget always restores cleanly.
 **System prompt and context.** The system prompt is assembled at request time
 from the agent's persona plus the FAQ rows in the database — store policies are
 never hardcoded, so updating a policy is a data change (edit the seed or the
-table), not a code change. Only the last 10 messages are sent as context, which
-bounds prompt size and token cost, and the reply length is capped for the same
-reason.
+table), not a code change. History is trimmed to a **token budget** (not a fixed
+message count) before being sent, so context stays within a known cost/size
+ceiling regardless of how large individual messages are, and the reply length is
+capped for the same reason.
 
 **Resilience.** Each model call runs under a 30-second timeout (`AbortController`),
 SDK retries are capped so a transient rate limit surfaces as a rate limit rather
 than a confusing timeout, and every provider error is mapped to a typed
 `LLMError` and shown to the user as a single friendly message.
+
+**Logging.** Requests and errors are logged with structured (pino) logging — one
+JSON line per request in production, with the level keyed off the status code
+(5xx → error, 4xx → warn), request-id correlation, health-check noise excluded,
+and auth headers redacted.
 
 **Trade-offs.** OpenRouter adds a network hop and an external dependency, and free
 models carry rate limits and can be rotated out — both acceptable here and cheap
@@ -503,6 +509,8 @@ first request after idle can be slow due to cold starts.
   and a real orders API would slot into the same registry.
 - **Direct Anthropic provider.** A drop-in third implementation selectable via
   `LLM_PROVIDER`, plus provider fallback/retry routing for availability.
-- **Rate limiting, tests, and observability.** Per-session rate limiting, unit
-  tests around validation and a mocked provider, and structured request logging.
+- **Rate limiting and tests.** Per-session rate limiting, and unit tests around
+  validation and a mocked provider.
+- **Deeper observability.** Structured logging is in place; metrics and tracing
+  (e.g. OpenTelemetry) would be the next step.
 </content>

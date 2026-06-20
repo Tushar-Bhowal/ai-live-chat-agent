@@ -3,10 +3,12 @@ import cors from "cors";
 import { env } from "../config/env.js";
 import { chatRouter } from "./routes/chat.routes.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import { requestLogger } from "./middleware/request-logger.js";
 
 export function createApp(): Express {
   const app = express();
 
+  app.use(requestLogger);
   // Restrict to the configured frontend origin when set; reflect any origin in
   // local development where CORS_ORIGIN is left empty.
   app.use(cors({ origin: env.CORS_ORIGIN || true }));

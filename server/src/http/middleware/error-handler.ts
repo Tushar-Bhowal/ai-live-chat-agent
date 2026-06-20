@@ -4,8 +4,9 @@ import { InvalidMessageError } from "../../domain/agent/agent.service.js";
 import { LLMError } from "../../domain/llm/index.js";
 
 // Registered last. Turns any thrown error (Express 5 forwards async rejections
-// here too) into a clean JSON response instead of a crash.
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+// here too) into a clean JSON response instead of a crash. Logs through req.log
+// so each line is correlated with its request id.
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof ZodError) {
     res.status(400).json({ error: err.issues[0]?.message ?? "Invalid request" });
     return;
@@ -18,7 +19,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
   if (err instanceof LLMError) {
     // Log the precise cause for operators; show one friendly line to the user.
-    console.error(`LLM error [${err.kind}]:`, err.cause ?? err.message);
+    req.log.error({ kind: err.kind, err: err.cause }, "LLM request failed");
     res.status(502).json({
       error: "The assistant is unavailable right now. Please try again.",
     });
@@ -38,6 +39,6 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     }
   }
 
-  console.error("Unhandled error:", err);
+  req.log.error({ err }, "Unhandled error");
   res.status(500).json({ error: "Something went wrong. Please try again." });
 };
