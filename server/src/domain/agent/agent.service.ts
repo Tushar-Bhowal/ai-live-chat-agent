@@ -7,13 +7,11 @@ import { getLLMProvider } from "../llm/index.js";
 import type { ChatMessage } from "../llm/index.js";
 import { tools } from "../tools/tool.js";
 
-/** Hard cap on a single inbound message; enforced again at the HTTP boundary. */
 export const MAX_MESSAGE_LENGTH = 4000;
 
-/** How many recent messages to send as context, to bound prompt size and cost. */
+// Recent messages sent as context, to bound prompt size and cost.
 const HISTORY_LIMIT = 10;
 
-/** Raised when the inbound message fails basic validation. */
 export class InvalidMessageError extends Error {
   constructor(message: string) {
     super(message);
@@ -23,7 +21,7 @@ export class InvalidMessageError extends Error {
 
 export interface IncomingMessage {
   channel?: string;
-  /** The conversation id; a new conversation is started when absent or unknown. */
+  // The conversation id; a new conversation starts when absent or unknown.
   sessionId?: string;
   text: string;
 }
@@ -33,11 +31,8 @@ export interface AgentReply {
   sessionId: string;
 }
 
-/**
- * The channel-agnostic heart of the agent. Every channel — the web widget today,
- * a messaging webhook tomorrow — funnels through here, so persistence, context,
- * and the model call live in one place.
- */
+// Channel-agnostic core: every channel funnels through here, so persistence,
+// context, and the model call live in one place.
 export async function handleIncomingMessage(
   input: IncomingMessage,
 ): Promise<AgentReply> {
@@ -85,7 +80,7 @@ export async function handleIncomingMessage(
   return { reply, sessionId: conversation.id };
 }
 
-/** Reuses the conversation for a known session id, otherwise starts a new one. */
+// Reuse a known conversation, otherwise start a new one.
 async function resolveConversation(
   sessionId: string | undefined,
   channel: string,
@@ -99,7 +94,7 @@ async function resolveConversation(
   return conversationRepository.create({ channel });
 }
 
-/** Maps stored messages to the provider's neutral role/content shape. */
+// Map stored messages to the provider's neutral role/content shape.
 function toChatHistory(messages: Message[]): ChatMessage[] {
   return messages.map((message) => ({
     role: message.sender === "ai" ? "assistant" : message.sender,

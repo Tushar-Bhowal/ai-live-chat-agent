@@ -17,10 +17,8 @@ const SendMessageSchema = z.object({
 
 export const chatRouter = Router();
 
-/**
- * The live-chat adapter: validate, hand off to the channel-agnostic agent, and
- * return its reply. Errors propagate to the central handler.
- */
+// Live-chat adapter: validate, hand off to the agent, return its reply.
+// Errors propagate to the central handler.
 chatRouter.post("/message", async (req, res) => {
   const { message, sessionId } = SendMessageSchema.parse(req.body);
   const result = await handleIncomingMessage({
@@ -31,7 +29,7 @@ chatRouter.post("/message", async (req, res) => {
   res.json(result);
 });
 
-/** Returns a conversation's transcript so the widget can restore it on reload. */
+// Transcript for restoring a conversation on reload.
 chatRouter.get("/:sessionId/messages", async (req, res) => {
   const sessionId = z.string().min(1).parse(req.params.sessionId);
   const messages = await messageRepository.listByConversation(sessionId);

@@ -19,7 +19,7 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
-/** Owns the conversation: history, in-flight state, and sending messages. */
+// Owns the conversation: history, in-flight state, and sending.
 export function useChat(): UseChat {
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [sending, setSending] = useState(false);

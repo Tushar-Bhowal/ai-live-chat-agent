@@ -9,12 +9,9 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_OUTPUT_TOKENS = 500;
 const MAX_TOOL_ROUNDS = 4;
 
-/**
- * Talks to Google's Gemini models. Gemini's SDK differs from the OpenAI shape —
- * it uses `user`/`model` roles, a separate `systemInstruction`, and its own
- * function-calling format — but it satisfies the same LLMProvider interface, so
- * nothing outside this file is aware of those differences.
- */
+// Gemini's SDK differs from the OpenAI shape (user/model roles, a separate
+// systemInstruction, its own function-calling format) but satisfies the same
+// interface, so nothing outside this file knows the difference.
 export class GeminiProvider implements LLMProvider {
   private readonly client: GoogleGenAI;
   private readonly model: string;

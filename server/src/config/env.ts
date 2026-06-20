@@ -1,10 +1,8 @@
 import "dotenv/config";
 import { z } from "zod";
 
-/**
- * Validates configuration once at startup so the process fails immediately with
- * a clear message instead of crashing mid-request on a missing value.
- */
+// Validated once at startup so a missing value fails fast with a clear message
+// rather than crashing mid-request.
 const EnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -61,4 +59,3 @@ function loadEnv() {
 }
 
 export const env = loadEnv();
-export type Env = typeof env;

@@ -189,7 +189,6 @@ your conversation is restored.
 | `server` | `npm run dev` | Start the API with hot reload |
 | `server` | `npm run build` / `npm start` | Compile to `dist/` and run it |
 | `server` | `npm run typecheck` | Type-check without emitting |
-| `server` | `npm run llm:smoke` | Send one real request to the configured model |
 | `web` | `npm run dev` | Start the Vite dev server |
 | `web` | `npm run build` | Production build |
 

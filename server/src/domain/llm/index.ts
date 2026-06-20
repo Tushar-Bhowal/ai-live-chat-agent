@@ -8,7 +8,7 @@ export { LLMError } from "./llm-provider.js";
 
 let cached: LLMProvider | undefined;
 
-/** Returns the configured provider, instantiated once and reused. */
+// Instantiated once and reused.
 export function getLLMProvider(): LLMProvider {
   if (!cached) {
     cached = createProvider();

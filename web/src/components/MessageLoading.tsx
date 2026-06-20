@@ -1,10 +1,7 @@
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-/**
- * Three-dot indicator shown while the agent composes a reply. The dots bounce,
- * but fall back to static dots when the user prefers reduced motion (SVG SMIL
- * animations don't honor the CSS reduced-motion guard on their own).
- */
+// Bouncing dots while the agent replies; static when reduced motion is on
+// (SVG SMIL animations don't honor the CSS reduced-motion guard on their own).
 export function MessageLoading() {
   const reduced = usePrefersReducedMotion();
   return (

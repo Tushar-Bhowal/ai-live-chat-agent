@@ -1,10 +1,7 @@
 import { prisma } from "../db/client.js";
 import type { Conversation } from "../generated/prisma/client.js";
 
-/**
- * Data access for conversations. The repository layer is the only place that
- * talks to Prisma; services depend on these methods, never on the client.
- */
+// Repositories are the only layer that touches Prisma; services depend on these.
 export const conversationRepository = {
   findById(id: string): Promise<Conversation | null> {
     return prisma.conversation.findUnique({ where: { id } });

@@ -8,8 +8,7 @@ interface MockOrder {
   items: number;
 }
 
-// Stand-in for a real orders service. The point this demonstrates is the
-// tool-calling loop, not the data source — swapping this for a live API call
+// Stand-in for a real orders service; swapping this for a live API call
 // wouldn't change anything else.
 const MOCK_ORDERS: Record<string, MockOrder> = {
   "ORD-1001": {

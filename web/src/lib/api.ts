@@ -13,7 +13,7 @@ export interface SendResult {
   sessionId: string;
 }
 
-/** A failure surfaced to the user; its message is safe to display. */
+// Its message is safe to show to the user.
 export class ApiError extends Error {}
 
 async function readError(res: Response): Promise<string> {

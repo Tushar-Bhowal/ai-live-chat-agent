@@ -1,6 +1,6 @@
+// One ongoing conversation per browser, keyed in localStorage.
 const STORAGE_KEY = "chat_session_id";
 
-/** The widget tracks a single ongoing conversation, keyed in localStorage. */
 export function getSessionId(): string | null {
   try {
     return localStorage.getItem(STORAGE_KEY);

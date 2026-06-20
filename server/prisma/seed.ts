@@ -2,13 +2,8 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client.js";
 
-/**
- * Seeds the FAQ knowledge base for the demo store. These rows are assembled
- * into the assistant's system prompt at request time rather than hardcoded, so
- * store policies can change without touching application code.
- *
- * Idempotent: clears the table first so re-running yields a known set.
- */
+// Seeds the FAQ knowledge base the agent answers from. Idempotent: clears the
+// table first so re-running yields a known set.
 const connectionString = process.env["DATABASE_URL"];
 if (!connectionString) {
   throw new Error("DATABASE_URL is not set");

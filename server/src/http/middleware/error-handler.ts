@@ -3,11 +3,8 @@ import { ZodError } from "zod";
 import { InvalidMessageError } from "../../domain/agent/agent.service.js";
 import { LLMError } from "../../domain/llm/index.js";
 
-/**
- * Central error handler. Registered last so any error thrown from a route —
- * including rejected promises, which Express 5 forwards automatically — becomes
- * a clean JSON response instead of a crash or stack trace.
- */
+// Registered last. Turns any thrown error (Express 5 forwards async rejections
+// here too) into a clean JSON response instead of a crash.
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
     res.status(400).json({ error: err.issues[0]?.message ?? "Invalid request" });

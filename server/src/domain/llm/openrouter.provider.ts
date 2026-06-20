@@ -10,17 +10,13 @@ const MAX_OUTPUT_TOKENS = 500;
 // Bounds how many times the model may call tools before it must answer.
 const MAX_TOOL_ROUNDS = 4;
 
-/**
- * Talks to models hosted on OpenRouter through its OpenAI-compatible API. The
- * model is configurable per environment, so cost/quality can be tuned without
- * code changes.
- */
+// Uses the OpenAI-compatible API, so the model is just a config string.
 export class OpenRouterProvider implements LLMProvider {
   private readonly client: OpenAI;
   private readonly model: string;
 
   constructor() {
-    // Env validation already guarantees these; the guard keeps types honest.
+    // Env validation guarantees these; the guard keeps the types non-optional.
     if (!env.OPENROUTER_API_KEY || !env.OPENROUTER_MODEL) {
       throw new Error("OpenRouter configuration is incomplete.");
     }
