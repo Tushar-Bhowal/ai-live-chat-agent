@@ -4,7 +4,6 @@ import { env } from "../config/env.js";
 import { chatRouter } from "./routes/chat.routes.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
-// Builds the app without binding a port, so it can be constructed in tests.
 export function createApp(): Express {
   const app = express();
 
