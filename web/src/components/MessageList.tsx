@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import Markdown, { type Components } from "react-markdown";
 import { cn } from "@/lib/utils";
+import { MessageLoading } from "@/components/MessageLoading";
 import type { UiMessage } from "@/hooks/useChat";
 
 // Render the agent's Markdown to fit inside a chat bubble. Raw HTML is not
@@ -102,11 +103,9 @@ function Bubble({ sender, text }: { sender: "user" | "ai"; text: string }) {
 function TypingIndicator() {
   return (
     <div className="flex justify-start">
-      <div className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-secondary px-4 py-3">
-        <span className="typing-dot" />
-        <span className="typing-dot [animation-delay:150ms]" />
-        <span className="typing-dot [animation-delay:300ms]" />
-        <span className="sr-only">Agent is typing</span>
+      <div className="flex items-center rounded-2xl rounded-bl-md bg-secondary px-3 py-2">
+        <MessageLoading />
+        <span className="sr-only">Mira is typing</span>
       </div>
     </div>
   );
