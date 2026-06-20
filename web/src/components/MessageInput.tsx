@@ -51,7 +51,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
         placeholder="Type your message…"
         aria-label="Message"
         className={cn(
-          "max-h-[120px] flex-1 resize-none rounded-[10px] border border-input bg-background px-3 py-2 text-sm leading-relaxed",
+          "h-11 max-h-30 min-h-11 flex-1 resize-none rounded-[10px] border border-input bg-background px-3 py-2.5 text-sm leading-relaxed",
           "placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none",
         )}
       />
@@ -61,6 +61,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
         onClick={submit}
         disabled={disabled || value.trim().length === 0}
         aria-label="Send"
+        className="size-11 shrink-0"
       >
         <SendHorizontal className="size-4" />
       </Button>
