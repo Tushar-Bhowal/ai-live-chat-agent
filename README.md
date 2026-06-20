@@ -31,6 +31,8 @@ added with minimal change.
 
 - Real-time support chat backed by a real LLM, answering only from a seeded
   knowledge base and offering a human handoff when it doesn't know.
+- Tool calling: the agent looks up live order status through a tool when a
+  customer provides an order id, rather than guessing.
 - Conversations persisted in PostgreSQL; history reloads on refresh via a
   session id stored in the browser.
 - Typing indicator, auto-scroll, in-flight send disabling, Markdown-rendered
@@ -201,10 +203,12 @@ your conversation is restored.
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string. In production, the pooled connection string. |
 | `DIRECT_URL` | Prod | Direct (non-pooled) connection string used for migrations. |
-| `LLM_PROVIDER` | No | `openrouter` (default) or `anthropic`. |
+| `LLM_PROVIDER` | No | `openrouter` (default), `gemini`, or `anthropic`. |
 | `OPENROUTER_API_KEY` | Yes* | OpenRouter key — get one at [openrouter.ai](https://openrouter.ai). *Required when `LLM_PROVIDER=openrouter`. |
 | `OPENROUTER_MODEL` | Yes* | Pinned model id, e.g. `openai/gpt-oss-120b:free`. Free model availability rotates — see [openrouter.ai/models?max_price=0](https://openrouter.ai/models?max_price=0). |
-| `ANTHROPIC_API_KEY` | No | Reserved for the optional direct-Anthropic provider. |
+| `GEMINI_API_KEY` | Yes* | Google AI Studio key — get one at [aistudio.google.com](https://aistudio.google.com). *Required when `LLM_PROVIDER=gemini`. |
+| `GEMINI_MODEL` | Yes* | Gemini model id, e.g. `gemini-2.5-flash`. *Required when `LLM_PROVIDER=gemini`. |
+| `ANTHROPIC_API_KEY` | No | Reserved for a future direct-Anthropic provider. |
 | `PORT` | No | API port (default `4000`). |
 | `CORS_ORIGIN` | No | Allowed frontend origin. Leave empty in local dev to accept any localhost origin; set the deployed URL in production. |
 | `NODE_ENV` | No | `development` (default), `test`, or `production`. |
@@ -248,10 +252,15 @@ rather than a 404, so the widget can always restore cleanly.
 
 The LLM integration sits behind a single `LLMProvider` interface, so the agent
 logic, persistence, and channel handling never depend on any specific vendor.
-The default implementation routes through OpenRouter, which gives access to many
-models — free open-source up to frontier GPT/Claude/Gemini — by changing one
-model string, making the system model-agnostic out of the box and letting cost
-and quality be tuned per environment without code changes. The deployment
+Two implementations ship — one over OpenRouter (the OpenAI-compatible SDK) and
+one over Google Gemini (a structurally different SDK: `user`/`model` roles, a
+separate system instruction, and its own function-calling format) — proving the
+abstraction holds across genuinely different backends. The active one is chosen
+by the `LLM_PROVIDER` environment variable. The default routes through
+OpenRouter, which itself gives access to many models — free open-source up to
+frontier GPT/Claude/Gemini — by changing one model string, making the system
+model-agnostic out of the box and letting cost and quality be tuned per
+environment without code changes. The deployment
 defaults to a free model because a support-FAQ workload doesn't need a frontier
 model, and it keeps the demo at zero marginal cost — the same discipline I'd
 apply in production (cheap models for simple tasks, expensive ones reserved for
@@ -305,11 +314,11 @@ Things intentionally left out to keep the scope tight, and what I'd add next:
   prompt; at scale I'd embed and retrieve only the relevant entries (RAG).
 - **Streaming responses.** Server-sent events would replace the typing
   indicator with real token streaming for a snappier feel.
-- **Tool calling.** The tool seam is in place; a first tool (e.g. an order-status
-  lookup) would turn the assistant from FAQ-only into an agent that acts.
-- **A second provider.** A direct Anthropic implementation of the same interface
-  is a drop-in, selectable via `LLM_PROVIDER`, and would exercise the abstraction
-  against a second backend.
+- **More tools.** The order-status lookup demonstrates the tool loop; real tools
+  (returns, address changes, live order systems) would slot into the same registry.
+- **More providers.** OpenRouter and Gemini are both implemented; a direct
+  Anthropic implementation of the same interface is a drop-in selectable via
+  `LLM_PROVIDER`, and provider fallback/retry routing would harden availability.
 - **Rate limiting, tests, and observability.** Per-session rate limiting,
   unit tests around validation and a mocked provider, and structured request
   logging/metrics would all harden it for real traffic.

@@ -12,10 +12,14 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   CORS_ORIGIN: z.string().optional(),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
-  LLM_PROVIDER: z.enum(["openrouter", "anthropic"]).default("openrouter"),
+  LLM_PROVIDER: z
+    .enum(["openrouter", "anthropic", "gemini"])
+    .default("openrouter"),
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().optional(),
 });
 
 function fail(lines: string[]): never {
@@ -45,6 +49,9 @@ function loadEnv() {
     if (!env.OPENROUTER_MODEL) missing.push("OPENROUTER_MODEL is required");
   } else if (env.LLM_PROVIDER === "anthropic") {
     if (!env.ANTHROPIC_API_KEY) missing.push("ANTHROPIC_API_KEY is required");
+  } else if (env.LLM_PROVIDER === "gemini") {
+    if (!env.GEMINI_API_KEY) missing.push("GEMINI_API_KEY is required");
+    if (!env.GEMINI_MODEL) missing.push("GEMINI_MODEL is required");
   }
   if (missing.length > 0) {
     fail([`for LLM_PROVIDER=${env.LLM_PROVIDER}:`, ...missing]);
