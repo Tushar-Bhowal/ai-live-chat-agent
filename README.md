@@ -10,6 +10,8 @@ The codebase is deliberately structured so new **channels** (WhatsApp,
 Instagram) and new **tools** (order lookups, returns, etc.) can be added with
 very little change. That extensibility is the main design goal.
 
+![Mira — the AI support chat widget](docs/screenshot.png)
+
 - **Backend:** Node.js, TypeScript (strict), Express 5, Prisma 7, PostgreSQL, Zod
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v4, shadcn/ui
 - **LLM:** any model via OpenRouter (default) or Google Gemini, behind one interface
